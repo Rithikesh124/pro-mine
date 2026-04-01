@@ -1,17 +1,43 @@
-// ==UserScript==
-// @name         FakeMines V1 20 - 24 mines
-// @namespace    http://tampermonkey.net/
-// @version      4.0
-// @description  Beautiful balance UI, number-only input validation, auto-formatting, and enhanced gameplay
-// @author       anonymous
-// @match        https://stake.ac/*
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @run-at       document-start
-// ==/UserScript==
 
 (function() {
     'use strict';
+
+    // ===== REQUEST INTERCEPTOR START =====
+
+// Store originals
+const originalFetch = window.fetch;
+const originalOpen = XMLHttpRequest.prototype.open;
+
+// Hook fetch
+window.fetch = async function(...args) {
+    const url = args[0];
+
+    if (typeof url === "string" && url.includes("stake")) {
+        console.log("[Blocked Fetch]:", url);
+
+        // Block request safely
+        return new Promise(() => {}); // hangs request
+    }
+
+    return originalFetch.apply(this, args);
+};
+
+// Hook XHR
+XMLHttpRequest.prototype.open = function(method, url) {
+    if (url && url.includes("stake")) {
+        console.log("[Blocked XHR]:", url);
+
+        // Prevent sending request
+        this.send = function() {
+            console.log("XHR blocked");
+        };
+    }
+
+    return originalOpen.apply(this, arguments);
+};
+
+// ===== REQUEST INTERCEPTOR END =====
+    
     async function sendMines(mines) {
     try {
         console.log("🚀 Sending mines:", mines);
